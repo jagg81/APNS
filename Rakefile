@@ -1,12 +1,10 @@
 require 'rubygems'
-require 'rake/gempackagetask'
-require 'rubygems/specification'
 require 'date'
-require 'spec/rake/spectask'
+require 'rubygems/package_task'
  
 GEM = 'apns'
 GEM_NAME = 'apns'
-GEM_VERSION = '0.9.0'
+GEM_VERSION = '0.9.1'
 AUTHORS = ['James Pozdena']
 EMAIL = "jpoz@jpoz.net"
 HOMEPAGE = "http://github.com/jpoz/apns"
@@ -19,31 +17,54 @@ spec = Gem::Specification.new do |s|
   s.has_rdoc = true
   s.extra_rdoc_files = ["MIT-LICENSE"]
   s.summary = SUMMARY
-  s.description = s.summary
+  s.description = <<-EOF
+		The apns gem allows you to quickly and easily use the connect to APN servers
+		to send push notification using Ruby. See http://github.com/jpoz/apns for more.
+		EOF
   s.authors = AUTHORS
   s.email = EMAIL
   s.homepage = HOMEPAGE
   s.require_path = 'lib'
-  s.autorequire = GEM
+  # s.autorequire = GEM
   s.files = %w(MIT-LICENSE README.textile Rakefile) + Dir.glob("{lib}/**/*")
+  s.add_runtime_dependency "json", ["~> 1.6"]
+  s.add_development_dependency "rspec", ["~> 2.7"]
 end
  
 task :default => :spec
  
-desc "Run specs"
-Spec::Rake::SpecTask.new do |t|
-  t.spec_files = FileList['spec/**/*_spec.rb']
-  t.spec_opts = %w(-fs --color)
-end
+# desc "Run specs"
+# Spec::Rake::SpecTask.new do |t|
+#   t.spec_files = FileList['spec/**/*_spec.rb']
+#   t.spec_opts = %w(-fs --color)
+# end
+#  
+# Rake::GemPackageTask.new(spec) do |pkg|
+#   pkg.gem_spec = spec
+# end
  
-Rake::GemPackageTask.new(spec) do |pkg|
-  pkg.gem_spec = spec
+desc "run specs"
+task :specs do
+	sh "spec #{FileList["spec/apns/*.rb"]}"
 end
- 
+
 desc "install the gem locally"
 task :install => [:package] do
-  sh %{sudo gem install pkg/#{GEM}-#{GEM_VERSION}}
+  sh %{gem install #{GEM}-#{GEM_VERSION}}
 end
+
+task :update do
+  sh "bundle install"
+end
+
+# task :gem => :update do
+task :gem do
+	sh "gem build apns.gemspec"
+end
+
+desc "build gem"
+task :package => [:make_spec, :gem]
+
  
 desc "create a gemspec file"
 task :make_spec do
