@@ -9,12 +9,12 @@ module APNS
     
     attr_accessor :host, :pem, :port, :pass
     
-    def initialize(host, port, pem = nil, pass = nil)
-      @host = host || DEFAULT_HOST
-      @port = port || DEFAULT_PORT
+    def initialize(options={})
+      @host = options[:host] || DEFAULT_HOST
+      @port = options[:port] || DEFAULT_PORT
       # openssl pkcs12 -in mycert.p12 -out client-cert.pem -nodes -clcerts
-      @pem = pem # this should be the path of the pem file not the contentes
-      @pass = pass
+      @pem = options[:pem] # this should be the path of the pem file not the contentes
+      @pass = options[:pass]
     end
     
     def send_notification(device_token, message)
