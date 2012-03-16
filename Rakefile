@@ -4,7 +4,7 @@ require 'rubygems/package_task'
  
 GEM = 'apns'
 GEM_NAME = 'apns'
-GEM_VERSION = '0.9.1'
+GEM_VERSION = '0.9.2'
 AUTHORS = ['James Pozdena']
 EMAIL = "jpoz@jpoz.net"
 HOMEPAGE = "http://github.com/jpoz/apns"
