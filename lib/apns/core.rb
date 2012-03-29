@@ -12,8 +12,9 @@ module APNS
     def initialize(options={})
       @host = options[:host] || DEFAULT_HOST
       @port = options[:port] || DEFAULT_PORT
-      # openssl pkcs12 -in mycert.p12 -out client-cert.pem -nodes -clcerts
-      @pem = options[:pem] # this should be the path of the pem file not the contentes
+      # openssl pkcs12 -in mycert.p12 -out client-cert.pem -nodes -clcerts -passin pass:password
+      @pem = options[:pem] # this should be the content of the pem file
+      @pem_filepath = options[:pem_filepath] || "" # pem file path
       @pass = options[:pass]
     end
     
@@ -51,15 +52,26 @@ module APNS
     end
 
     protected
-
-    def open_connection
-      raise "The path to your pem file is not set. (APNS.pem = /path/to/cert.pem)" unless @pem
-      raise "The path to your pem file does not exist!" unless File.exist?(@pem)
-
+    def ssl_context
+      unless File.exist?(@pem_filepath) || @pem
+        raise 
+        '''
+          The pem certificate is not set. 
+          (pem_filepath = {/path/to/cert.pem} || pem = {pem_file_content})
+        '''
+      end
+      
+      @pem = File.read(@pem_filepath) unless @pem
+      
       context      = OpenSSL::SSL::SSLContext.new
-      context.cert = OpenSSL::X509::Certificate.new(File.read(@pem))
-      context.key  = OpenSSL::PKey::RSA.new(File.read(@pem), @pass)
-
+      context.cert = OpenSSL::X509::Certificate.new(@pem)
+      context.key  = OpenSSL::PKey::RSA.new(@pem, @pass)
+      context
+    end
+    
+    def open_connection
+      context = self.ssl_context()
+      
       sock         = TCPSocket.new(@host, @port)
       ssl          = OpenSSL::SSL::SSLSocket.new(sock,context)
       ssl.connect
@@ -68,13 +80,8 @@ module APNS
     end
 
     def feedback_connection
-      raise "The path to your pem file is not set. (APNS.pem = /path/to/cert.pem)" unless @pem
-      raise "The path to your pem file does not exist!" unless File.exist?(@pem)
-
-      context      = OpenSSL::SSL::SSLContext.new
-      context.cert = OpenSSL::X509::Certificate.new(File.read(@pem))
-      context.key  = OpenSSL::PKey::RSA.new(File.read(@pem), @pass)
-
+      context = self.ssl_context()
+      
       fhost = @host.gsub('gateway','feedback')
       # puts fhost
 
